@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of the "PHP Wrapper for callas pdfToolbox CLI" repository.
+ * This file is part of the "PHP Wrapper for callas pdfChip" repository.
  *
  * Copyright 2021 Alannah Kearney <hi@alannahkearney.com>
  *

@@ -1,6 +1,6 @@
-# PHP Wrapper for callas pdfToolbox CLI
+# PHP Wrapper for callas pdfChip
 
-A PHP wrapper class for [callas pdfToolbox CLI](https://www.callassoftware.com/en/products/pdfchip).
+A PHP wrapper class for [callas pdfChip](https://www.callassoftware.com/en/products/pdfchip).
 
 ## Installation
 
@@ -62,4 +62,4 @@ We encourage you to contribute to this project. Please check out the [Contributi
 
 ## License
 
-"PHP Wrapper for callas pdfToolbox CLI" is released under the [MIT License](http://www.opensource.org/licenses/MIT).
+"PHP Wrapper for callas pdfChip" is released under the [MIT License](http://www.opensource.org/licenses/MIT).

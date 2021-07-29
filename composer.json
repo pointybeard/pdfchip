@@ -1,6 +1,6 @@
 {
     "name": "pointybeard/pdfchip",
-    "description": "A PHP wrapper class for callas pdfToolbox CLI",
+    "description": "PHP Wrapper for callas pdfChip",
     "homepage": "https://github.com/pointybeard/pdfchip",
     "license": "MIT",
     "minimum-stability": "stable",
