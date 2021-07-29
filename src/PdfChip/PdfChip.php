@@ -16,6 +16,7 @@ namespace pointybeard\PdfChip;
 use Exception;
 use pointybeard\PdfChip\Exceptions\PdfChipException;
 use pointybeard\PdfChip\Exceptions\PdfChipExecutionFailedException;
+use pointybeard\Helpers\Functions\Cli;
 
 class PdfChip
 {
@@ -50,87 +51,18 @@ class PdfChip
         // (guard) PdfChip is not installed or isn't in PATH
         self::assertPdfChipInstalled();
 
-        $command = sprintf('%s %s', self::which(self::PDFCHIP), $args);
+        $command = sprintf('%s %s', Cli\which(self::PDFCHIP), $args);
 
         try {
-            self::runCommand($command, $stdout, $stderr, $exitCode);
+            Cli\run_command($command, $stdout, $stderr, $exitCode);
         } catch (Exception $ex) {
             throw new PdfChipExecutionFailedException($args, $stderr, $exitCode, 0, $ex);
         }
     }
 
-    private static function runCommand(string $command, string &$stdout = null, string &$stderr = null, int &$exitCode = null): void
-    {
-        $pipes = null;
-        $exitCode = null;
-
-        $proc = proc_open(
-            "{$command};echo $? >&3",
-            [
-                0 => ['pipe', 'r'], // STDIN
-                1 => ['pipe', 'w'], // STDOUT
-                2 => ['pipe', 'w'], // STDERR
-                3 => ['pipe', 'w'], // Used to capture the exit code
-            ],
-            $pipes,
-            getcwd(),
-            null
-        );
-
-        // Close STDIN stream
-        fclose($pipes[0]);
-
-        // (guard) proc_open failed to return a resource
-        if (false == is_resource($proc)) {
-            throw new PdfChipException("Failed to run command {$command}. proc_open() returned FALSE.");
-        }
-
-        // Get contents of STDOUT and close stream
-        $stdout = trim(stream_get_contents($pipes[1]));
-        fclose($pipes[1]);
-
-        // Get contents od STDERR and close stream
-        $stderr = trim(stream_get_contents($pipes[2]));
-        fclose($pipes[2]);
-
-        // Grab the exit code then close the stream
-        if (false == feof($pipes[3])) {
-            $exitCode = (int) trim(stream_get_contents($pipes[3]));
-        }
-        fclose($pipes[3]);
-
-        // Close the process we created
-        proc_close($proc);
-
-        // (guard) proc_close return indiciated a failure
-        if (0 != $exitCode) {
-            // There was some kind of error. Throw an exception.
-            // If STDERR is empty, in effort to give back something
-            // meaningful, grab contents of STDOUT instead
-            throw new PdfChipException("Failed to run command {$command}. Returned: ".(true == empty(trim($stderr)) ? $stdout : $stderr));
-        }
-    }
-
-    private static function which(string $prog): ?string
-    {
-        // (guard) $prog is in the $paths array
-        if (true == array_key_exists($prog, self::$paths) && null != self::$paths[$prog]) {
-            return self::$paths[$prog];
-        }
-
-        try {
-            self::runCommand("which {$prog}", $output);
-            self::$paths[$prog] = $output;
-        } catch (Exception $ex) {
-            $output = null;
-        }
-
-        return $output;
-    }
-
     private static function assertPdfChipInstalled(): void
     {
-        if (null == self::which(self::PDFCHIP)) {
+        if (null == Cli\which(self::PDFCHIP)) {
             throw new PdfChipException('PdfChip executable cannot be located.');
         }
     }
