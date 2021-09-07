@@ -14,9 +14,10 @@ declare(strict_types=1);
 namespace pointybeard\PdfChip;
 
 use Exception;
+use pointybeard\Helpers\Functions\Cli;
 use pointybeard\PdfChip\Exceptions\PdfChipException;
 use pointybeard\PdfChip\Exceptions\PdfChipExecutionFailedException;
-use pointybeard\Helpers\Functions\Cli;
+use pointybeard\PdfChip\Exceptions\PdfChipAssertionFailedException;
 
 class PdfChip
 {
@@ -48,7 +49,7 @@ class PdfChip
 
     private static function runPdfChipWithArgs(string $args, string &$stdout = null, string &$stderr = null): void
     {
-        // (guard) PdfChip is not installed or isn't in PATH
+        // (guard) pdfChip is not installed or isn't in PATH
         self::assertPdfChipInstalled();
 
         $command = sprintf('%s %s', Cli\which(self::PDFCHIP), $args);
@@ -63,21 +64,21 @@ class PdfChip
     private static function assertPdfChipInstalled(): void
     {
         if (null == Cli\which(self::PDFCHIP)) {
-            throw new PdfChipException('PdfChip executable cannot be located.');
+            throw new PdfChipAssertionFailedException(self::PDFCHIP . ' executable cannot be located.');
         }
     }
 
     private static function assertOptionExists($option): void
     {
         if (false == in_array($option, self::$options)) {
-            throw new PdfChipException("Invalid option '{$option}' specified.");
+            throw new PdfChipAssertionFailedException("Invalid option '{$option}' specified.");
         }
     }
 
     private static function assertFileExists($file): void
     {
         if (false == is_readable($file) || false == file_exists($file)) {
-            throw new PdfChipException("File '{$file}' does not exist or is not readable.");
+            throw new PdfChipAssertionFailedException("File '{$file}' does not exist or is not readable.");
         }
     }
 
@@ -88,15 +89,15 @@ class PdfChip
         return $output;
     }
 
-    public static function process($inputFile, string $outputFile, array $arguments = [], ?string &$output = null, ?string &$errors = null): bool
+    public static function process($inputFiles, string $outputFile, array $arguments = [], ?string &$output = null, ?string &$errors = null): bool
     {
         $args = [];
         foreach ($arguments as $name => $value) {
+
+            // (guard) option name is invalid
+            self::assertOptionExists($name);
+
             if (is_numeric($name)) {
-
-                // (guard) Option name is invalid
-                self::assertOptionExists($name);
-
                 $args[] = "--{$value}";
 
                 continue;
@@ -106,22 +107,19 @@ class PdfChip
                 $value = [$value];
             }
 
-            // (guard) Option name is invalid
-            self::assertOptionExists($name);
-
             $args[] = sprintf('--%s="%s"', $name, implode(' ', $value));
         }
 
-        if (false == is_array($inputFile)) {
-            $inputFile = [$inputFile];
+        if (false == is_array($inputFiles)) {
+            $inputFiles = [$inputFiles];
         }
 
-        // (guard) Input file doesn't exist
-        array_map('self::assertFileExists', $inputFile);
+        // (guard) input file doesn't exist
+        array_map('self::assertFileExists', $inputFiles);
 
         self::runPdfChipWithArgs(sprintf(
             '%s %s %s', // <input> [...] <output> <args>
-            implode(' ', $inputFile),
+            implode(' ', $inputFiles),
             $outputFile,
             implode(' ', $args)
         ), $output, $errors);
