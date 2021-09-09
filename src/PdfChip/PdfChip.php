@@ -99,17 +99,22 @@ class PdfChip
             throw new PdfChipException('Unable to generate temporary file.');
         }
 
+        // pdfChip requires a `.html` extension otherwise it will refuse to load the file.
+        // So, rename the temp file to include the `.html` extension
+        if (false == rename($inputFile, $inputFile .= ".html")) {
+            throw new PdfChipException('Unable to generate temporary file. Failed to add .html extension.');
+        }
+
         // (guard) Unable to save contents to temporary file
-        if (true !== file_put_contents($inputFile, $input)) {
+        if (false === file_put_contents($inputFile, $input)) {
             throw new PdfChipException("Unable to save input string to temporary file {$inputFile}.");
         }
 
-        self::process($inputFile, $outputFile, $arguments, $output, $errors);
+        return self::process($inputFile, $outputFile, $arguments, $output, $errors);
 
-        return $inputFile;
     }
 
-    public static function process($inputFiles, string $outputFile, array $arguments = [], ?string &$output = null, ?string &$errors = null): bool
+    public static function process($inputFiles, string $outputFile, array $arguments = [], ?string &$output = null, ?string &$errors = null): string
     {
         $args = [];
         foreach ($arguments as $name => $value) {
@@ -144,6 +149,6 @@ class PdfChip
             implode(' ', $args)
         ), $output, $errors);
 
-        return true;
+        return $outputFile;
     }
 }
