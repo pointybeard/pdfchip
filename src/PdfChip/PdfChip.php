@@ -161,7 +161,7 @@ class PdfChip
 
         // pdfChip requires a file extension otherwise it will refuse to load the file.
         // So, rename the temp file to include the specified extension
-        if (false == rename($inputFile, $inputFile .= $inputFileType)) {
+        if (false == rename($inputFile, $inputFile .= ".{$inputFileType}")) {
             throw new PdfChipException("Unable to generate temporary file. Failed to add .{$inputFileType} extension.");
         }
 
