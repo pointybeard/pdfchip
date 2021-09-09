@@ -40,7 +40,8 @@ PdfChip\PdfChip::process(
         "zoom-factor" => 3,
         "remote-content" => "off",
         "licensetype" => "all",
-        "use-system-proxy"
+        "use-system-proxy",
+        "underlay" => ["file.pdf", "file2.pdf"]
     ],
     $o,
     $e
