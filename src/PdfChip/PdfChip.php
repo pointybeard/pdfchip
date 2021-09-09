@@ -15,9 +15,9 @@ namespace pointybeard\PdfChip;
 
 use Exception;
 use pointybeard\Helpers\Functions\Cli;
+use pointybeard\PdfChip\Exceptions\PdfChipAssertionFailedException;
 use pointybeard\PdfChip\Exceptions\PdfChipException;
 use pointybeard\PdfChip\Exceptions\PdfChipExecutionFailedException;
-use pointybeard\PdfChip\Exceptions\PdfChipAssertionFailedException;
 
 class PdfChip
 {
@@ -64,7 +64,7 @@ class PdfChip
     private static function assertPdfChipInstalled(): void
     {
         if (null == Cli\which(self::PDFCHIP)) {
-            throw new PdfChipAssertionFailedException(self::PDFCHIP . ' executable cannot be located.');
+            throw new PdfChipAssertionFailedException(self::PDFCHIP.' executable cannot be located.');
         }
     }
 
@@ -87,6 +87,26 @@ class PdfChip
         self::runPdfChipWithArgs('--version', $output);
 
         return $output;
+    }
+
+    public static function processString(string $input, string $outputFile, array $arguments = [], ?string &$output = null, ?string &$errors = null): string
+    {
+        // Save the string contents to a tmp file then call self::process();
+        $inputFile = tempnam(sys_get_temp_dir(), self::PDFCHIP);
+
+        // (guard) Unable to create a temporary file name
+        if (false == $inputFile) {
+            throw new PdfChipException('Unable to generate temporary file.');
+        }
+
+        // (guard) Unable to save contents to temporary file
+        if (true !== file_put_contents($inputFile, $input)) {
+            throw new PdfChipException("Unable to save input string to temporary file {$inputFile}.");
+        }
+
+        self::process($inputFile, $outputFile, $arguments, $output, $errors);
+
+        return $inputFile;
     }
 
     public static function process($inputFiles, string $outputFile, array $arguments = [], ?string &$output = null, ?string &$errors = null): bool
