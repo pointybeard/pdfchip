@@ -173,6 +173,18 @@ class PdfChip
         return self::process($inputFile, $outputFile, $options, $output, $errors);
     }
 
+    public static function remainingPagesPerHour(): ?int
+    {
+        self::runWithArgs('--status | grep "Pages per hour:"', $output, $errors);
+        preg_match("@(\d+) remaining@", $output, $matches);
+
+        if(false == isset($matches[1]) || false == is_numeric($matches[1])) {
+            return null;
+        }
+
+        return (int)$matches[1];
+    }
+
     public static function process($inputFiles, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null): string
     {
         $opts = [];
