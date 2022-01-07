@@ -5,7 +5,7 @@ declare(strict_types=1);
 /*
  * This file is part of the "PHP Wrapper for callas pdfChip" repository.
  *
- * Copyright 2021 Alannah Kearney <hi@alannahkearney.com>
+ * Copyright 2021-22 Alannah Kearney <hi@alannahkearney.com>
  *
  * For the full copyright and license information, please view the LICENCE
  * file that was distributed with this source code.
@@ -15,6 +15,7 @@ namespace pointybeard\PdfChip;
 
 use Exception;
 use pointybeard\Helpers\Functions\Cli;
+use pointybeard\Helpers\Functions\Flags;
 use pointybeard\PdfChip\Exceptions\PdfChipAssertionFailedException;
 use pointybeard\PdfChip\Exceptions\PdfChipException;
 use pointybeard\PdfChip\Exceptions\PdfChipExecutionFailedException;
@@ -34,6 +35,14 @@ class PdfChip
 
     public const STRING_TYPE_HTML = 'html';
 
+    public const PAGES_REMAINING_UNKNOWN = null;
+
+    public const PAGES_REMAINING_UNLIMITED = 'unlimited';
+
+    public const FLAGS_SKIP_ASSERT_ACTIVATED = 0x0001;
+
+    public const FLAGS_SKIP_ASSERT_INSTALLED = 0x0002;
+
     // Supported options. This is a mirror of options available directly. See pdfChip --help for more details
     private static $options = ['maxpages', 'underlay' => ['delimiter' => ' '], 'overlay' => ['delimiter' => ' '], 'import', 'zoom-factor', 'dump-static-html', 'use-system-proxy', 'remote-content', 'licenseserver', 'lsmessage', 'timeout-licenseserver', 'licensetype'];
 
@@ -42,10 +51,17 @@ class PdfChip
     {
     }
 
-    private static function runWithArgs(string $args, string &$stdout = null, string &$stderr = null): void
+    private static function runWithArgs(string $args, string &$stdout = null, string &$stderr = null, ?int $flags = null): void
     {
         // (guard) pdfChip is not installed or isn't in PATH
-        self::assertInstalled();
+        if (false == Flags\is_flag_set($flags, self::FLAGS_SKIP_ASSERT_INSTALLED)) {
+            self::assertInstalled();
+        }
+
+        // (guard) pdfChip has not been activated
+        if (false == Flags\is_flag_set($flags, self::FLAGS_SKIP_ASSERT_ACTIVATED)) {
+            self::assertActivated();
+        }
 
         $command = sprintf('%s %s', Cli\which(self::EXECUTABLE_NAME), $args);
 
@@ -60,6 +76,13 @@ class PdfChip
     {
         if (null == Cli\which(self::EXECUTABLE_NAME)) {
             throw new PdfChipAssertionFailedException(self::EXECUTABLE_NAME.' executable cannot be located.');
+        }
+    }
+
+    private static function assertActivated(): void
+    {
+        if (false == self::isActivated()) {
+            throw new PdfChipAssertionFailedException(self::EXECUTABLE_NAME.' has not been activated.');
         }
     }
 
@@ -79,7 +102,7 @@ class PdfChip
 
     public static function version(): ?string
     {
-        self::runWithArgs('--version', $output);
+        self::runWithArgs('--version', $output, $errors, self::FLAGS_SKIP_ASSERT_ACTIVATED);
 
         return $output;
     }
@@ -139,17 +162,60 @@ class PdfChip
         );
     }
 
-    public static function processHtmlString(string $input, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null): string
+    public static function remainingPagesPerHour()
     {
-        return self::processString($input, self::STRING_TYPE_HTML, $outputFile, $options, $output, $errors);
+        self::runWithArgs('--status | grep "Pages per hour:"', $output, $errors, self::FLAGS_SKIP_ASSERT_ACTIVATED);
+
+        // Examples of possible values for 'Pages per hour':
+        // 1. ""
+        // 2. Pages per hour: unlimited (unlimited remaining)
+        // 3. Pages per hour: 1000 (523 remaining)
+
+        preg_match("@\(([^ ]+) remaining\)$@", trim((string) $output), $matches);
+
+        // (guard) unlimited pages
+        if ('unlimited' == $matches[1]) {
+            return self::PAGES_REMAINING_UNLIMITED;
+        }
+
+        // (guard) nothing was matched or its not something we recognise
+        if (false == isset($matches[1]) || false == is_numeric($matches[1])) {
+            return self::PAGES_REMAINING_UNKNOWN;
+        }
+
+        return (int) $matches[1];
     }
 
-    public static function processSvgString(string $input, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null): string
+    public static function isActivated(): bool
     {
-        return self::processString($input, self::STRING_TYPE_SVG, $outputFile, $options, $output, $errors);
+        self::runWithArgs('--status | grep "Activation:"', $output, $errors, self::FLAGS_SKIP_ASSERT_ACTIVATED);
+
+        // Examples of possible values for 'Activiation':
+        // 1. ""
+        // 2. Activation: 7E3HF8K...G795CNFMS	callas pdfChip S	/home/.../License.txt
+        // 3. Activation: None
+
+        preg_match('@^Activation: (.+)$@', trim((string) $output), $matches);
+
+        // (guard) activation is 'None'
+        if (false == isset($matches[1]) || empty($matches[1]) || 'none' == strtolower($matches[1])) {
+            return false;
+        }
+
+        return true;
     }
 
-    public static function processString(string $input, string $inputFileType, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null): string
+    public static function processHtmlString(string $input, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
+    {
+        return self::processString($input, self::STRING_TYPE_HTML, $outputFile, $options, $output, $errors, $flags);
+    }
+
+    public static function processSvgString(string $input, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
+    {
+        return self::processString($input, self::STRING_TYPE_SVG, $outputFile, $options, $output, $errors, $flags);
+    }
+
+    public static function processString(string $input, string $inputFileType, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
     {
         // Save the string contents to a tmp file then call self::process();
         $inputFile = tempnam(sys_get_temp_dir(), self::EXECUTABLE_NAME);
@@ -170,22 +236,10 @@ class PdfChip
             throw new PdfChipException("Unable to save input string to temporary file {$inputFile}.");
         }
 
-        return self::process($inputFile, $outputFile, $options, $output, $errors);
+        return self::process($inputFile, $outputFile, $options, $output, $errors, $flags);
     }
 
-    public static function remainingPagesPerHour(): ?int
-    {
-        self::runWithArgs('--status | grep "Pages per hour:"', $output, $errors);
-        preg_match("@(\d+) remaining@", $output, $matches);
-
-        if(false == isset($matches[1]) || false == is_numeric($matches[1])) {
-            return null;
-        }
-
-        return (int)$matches[1];
-    }
-
-    public static function process($inputFiles, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null): string
+    public static function process($inputFiles, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
     {
         $opts = [];
         foreach ($options as $name => $value) {
