@@ -4,16 +4,24 @@ A PHP wrapper class for [callas pdfChip](https://www.callassoftware.com/en/produ
 
 ## Installation
 
-This library is installed via [Composer](http://getcomposer.org/). To install, use `composer require pointybeard/pdfchip` or add `"pointybeard/pdfchip": "~1.0.0"` to your `composer.json` file.
+This library is installed via [Composer](http://getcomposer.org/). To install, use `composer require pointybeard/pdfchip` or add `"pointybeard/pdfchip": "^1.0"` to your `composer.json` file.
 
 And run composer to update your dependencies:
 
     $ curl -s http://getcomposer.org/installer | php
     $ php composer.phar update
 
+### Using the Mock Executable
+
+If the system you are running code on does not have pdfChip installed or it cannot be activiated, use the mock command `bin/pdfchip` instead. It emulates `--help`, `--status`, and processing input html.
+
+To do this, make `bin/pdfchip` executable and place it in your system path (e.g. symlinking to `/usr/local/bin`).
+
+Now, the pdfchip library will call this mock executable instead. Note you will always get the same pdf output regardless of input.
+
 ### Requirements
 
-This library requires pdfChip and PHP 7.4 or greater is installed.
+This library requires pdfChip and PHP 7.4 or later.
 
 ## Usage
 

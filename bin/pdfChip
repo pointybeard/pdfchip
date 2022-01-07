@@ -1,0 +1,352 @@
+#!/usr/bin/env php
+<?php declare(strict_types=1);
+
+/*
+This file is part of the "PHP Wrapper for callas pdfChip" repository.
+
+Copyright 2021-22 Alannah Kearney <hi@alannahkearney.com>
+
+For the full copyright and license information, please view the LICENCE
+file that was distributed with this source code.
+*/
+
+/*
+|--------------------------------------------------------------------------
+| pdfChip Mock Executable
+|--------------------------------------------------------------------------
+|
+| This is a mock up of the pdfChip executable for systems that don't
+| or can't activate their pdfChip licence where code is being run
+| e.g. local dev. All the command line arguments are supported
+| however processing will always return the same output
+| regardless of the input files or options provided.
+|
+*/
+
+// mock pdf output (base64 encoded)
+$output = <<<OUTPUT
+JVBERi0xLjYKJeLjz9MKMiAwIG9iago8PAovVHlwZS9QYWdlCi9NZWRpYUJveFswIDAgNTk1IDg0
+MiBdCi9QYXJlbnQgMSAwIFIKL1Jlc291cmNlcyA0IDAgUgovQ29udGVudHMgNSAwIFIKPj4KZW5k
+b2JqCjQgMCBvYmoKPDwKL0ZvbnQ8PAovRm8xIDMgMCBSCj4+Cj4+CmVuZG9iago1IDAgb2JqCjw8
+Ci9GaWx0ZXIvRmxhdGVEZWNvZGUKL0xlbmd0aCAyMDkKPj4Kc3RyZWFtCnicjVDBasJAEH3n+Yo5
+aqEmWbKSXBVbEARTFzwUDyGJRmWTmKb/38k2Er25y868neG9N4yXLctzs+vSttump4I3WwrYl/ve
+pygMZrGceRxGijNLvuu1pwF8fZLiDd3cV8daCIrbgkrav3ElvbW8i/T/NQOes4p6He+jDliFbI60
+MI+OPhtL3xMYlDjjBzxEixoZroJq/KJD4yLjiFYqVlAnjEJyg1yqS8dvpgezppWh5GkGrWdKvzTG
+aJs5G4sUFfJRNiHPbXBV5ff9/QFCUEbrCmVuZHN0cmVhbQplbmRvYmoKMTIgMCBvYmoKPDwKL0Zp
+bHRlci9GbGF0ZURlY29kZS9UeXBlL0NNYXAvQ01hcE5hbWUvVVRGMTZUb1VuaWNvZGVDTWFwCi9D
+SURTeXN0ZW1JbmZvPDwvUmVnaXN0cnkoY0NoaXApL09yZGVyaW5nKFVURjE2KQovU3VwcGxlbWVu
+dCAwCj4+Ci9XTW9kZSAwCi9MZW5ndGggMTkzMQo+PgpzdHJlYW0KeJxt2ctuG0cCheG9noKzMOAs
+HKnuVUEQoK6AF5MEsZO9LbY9AixKoKSF335E/jqeSyzANvqw22x9vyAQ5Kt//P7uTd3ffdzeuB+v
+dn9sD3dPx+vtTf/nh/uLV6/G3fXT7XZ4/HXb9ttejz78tPv9eHf9bnvcve5vx9vDzeMPzye/PVx/
+edpvOuv7J7Xt883hP6ecnmf3+s/3y8T3d38ebq7v9ttpO536/ubxy/Mp33l0d93/dXO/Oz+wuzqd
++9d2fLi5O/y0Mz9eXZnnYR72/e72dO8PF5cvz7+71B19ujnsjy83sft4uqULt9vfXD++HJz/vr59
+Njhd++7rw+N2+/bw6W73ctb+6f7lzMs/nv95eDx+3b0+39QPu/326eLyt+N+O94cPr/c/cv67un+
+/st2uqnd1XnZDnseOX1Xv3643XaX3/luv53x/uv9trPnY8Pzn855uP9wvR0/HD5vFz9fPX/9svt5
+PX/9cvrf/+9xc3XFdR8/Mex2uuTq6vmSl6PzbJgNs9FsmS2z1eyYHbPT7Jk9s9ccmANz0ByZI3PU
+nJgTc9KcmTNz1lyYC3PRXJkrc9XcmBtz09yZO3PXPJgH89A8mSfz1LyYF/N6mQ3eBm8jb4O3wdvI
+2+Bt8DbyNngbvI28Dd4GbyNvg7fB28jb4G3wNvI2eBu8jbwN3gZvI2+Dt8HbyNvgbfA28jZ4G7yN
+vA3eBm8jb4O3wdvI2+Bt8DbyNngbvI28Ld4Wbytvi7fF28rb4m3xtvK2eFu8rbwt3hZvK2+Lt8Xb
+ytvibfG28rZ4W7ytvC3eFm8rb4u3xdvK2+Jt8bbytnhbvK28Ld4Wbytvi7fF28rb4m3xtvK2eFu8
+rbwd3g5vJ2+Ht8Pbydvh7fB28nZ4O7ydvB3eDm8nb4e3w9vJ2+Ht8Hbydng7vJ28Hd4Obydvh7fD
+28nb4e3wdvJ2eDu8nbwd3g5vJ2+Ht8Pbydvh7fB28nZ4O7ydvD3eHm8vb4+3x9vL2+Pt8fby9nh7
+vL28Pd4eby9vj7fH28vb4+3x9vL2eHu8vbw93h5vL2+Pt8fby9vj7fH28vZ4e7y9vD3eHm8vb4+3
+x9vL2+Pt8fby9nh7vL28A94B7yDvgHfAO8g74B3wDvIOeAe8g7wD3gHvIO+Ad8A7yDvgHfAO8g54
+B7yDvAPeAe8g74B3wDvIO+Ad8A7yDngHvIO8A94B7yDvgHfAO8g74B3wDvIOeAe8g7wj3hHvKO+I
+d8Q7yjviHfGO8o54R7zPR6eXR3oZ9N0XRpEYkRhRMSIxIjGiYkRiRGJExYjEiMSIihGJEYkRFSMS
+IxIjKkYkRiRGVIxIjEiMqBiRGJEYUTEiMSIxomJEYkRiRMWIxIjEiIqRiJGIkRQjESMRIylGIkYi
+RlKMRIxEjKQf/oR3wjvJO+Gd8E7yTngnvJO8E94J7yTvhHfCO8k74Z3wTvJOeCe8k7wT3gnvJO+E
+d8I7yTvhnfBO8k54J7yTvBPeCe8k74x3xjvLO+Od8c7yznhnvLO8M94Z7yzvjHfGO8s7453xzvLO
+eGe8s7wz3hnvLO+Md8Y7yzvjnfHO8s54Z7yzvDPeGe8s74x3xjvLO+Od8c7yznhnvLO8M94Z7yzv
+gnfBu8i74F3wLvIueBe8i7wL3gXvIu+Cd8G7yLvgXfAu8i54F7yLvAveBe8i74J3wbvIu+Bd8C7y
+LngXvIu8C94F7yLvgnfBu8i74F3wLvIueBe8i7wL3gXvIu+Kd8W7yrviXfGu8q54V7yrvCveFe8q
+74p3xbvKu+Jd8a7yrnhXvKu8K94V7yrvinfFu8q74l3xrvKueFe8q7wr3hXvKu+Kd8W7yrviXfGu
+8q54V7yrvCveFe8q74Z3w7vJu+Hd8G7ybng3vJu8G94N7ybvhnfDu8m74d3wbvJueDe8m7wb3g3v
+Ju+Gd8O7ybvh3fBu8m54N7ybvBveDe8m74Z3w7vJu+Hd8G7ybng3vJu8G94N7ybvjnfHu8u7493x
+7vLueHe8u7w73h3vLu+Od8e7y7vj3fHu8u54d7y7vDveHe/z0f+8MArxb6+LOi06LbpadFp0WnS1
+6LTotOhq0WnRadHVotOi06KrRadFp0VXi06LTouuFp0WnRZdLQYtBi2GWgxaDFoMtRi0GLQYajFo
+MWgx1GLQYtBiqMWgxaDFUItBi0GLoRaDFoMWQz/7A++B95D3wHvgPeQ98B54D3kPvAfeQ94D74H3
+kPfAe+A95D3wHngPeQ+8B95D3hPvifeU98R74j3lPfGeeE95T7wn3lPeE++J95T3xHviPeU98Z54
+T3lPvCfeU94T74n3lPfEe+I95T3xnnhPeU+8J95T3hPvifeU98R74j3lPfGeeE95T7wn3lPe6+W9
+X7yXvBfeC+8l74X3wnvJe+G98F7yXngvvJe8F94L7yXvhffCe8l74b3wXvJeeC+8l7wX3gvvJe+F
+98J7yXvhvfBe8l54L7yXvBfeC+8l74X3wnvJe+G98D4f/ffvyNPb7KePCr69h3/9dDxuh8fzJwWX
+egf/5rB9+8Th/u7+dNX5z/mjCn0gcjr6bV38GwjCenMKZW5kc3RyZWFtCmVuZG9iagozIDAgb2Jq
+Cjw8L1R5cGUvRm9udC9TdWJ0eXBlL1R5cGUwL0VuY29kaW5nL0lkZW50aXR5LUgvQmFzZUZvbnQv
+U1hSV0ZYK0FuZGFsZU1vbm8KL1RvVW5pY29kZSAxMiAwIFIKL0Rlc2NlbmRhbnRGb250c1s2IDAg
+Ul0KPj4KZW5kb2JqCjYgMCBvYmoKPDwvVHlwZS9Gb250L1N1YnR5cGUvQ0lERm9udFR5cGUyL0NJ
+RFN5c3RlbUluZm88PC9SZWdpc3RyeShBZG9iZSkvT3JkZXJpbmcoSWRlbnRpdHkpL1N1cHBsZW1l
+bnQgMD4+L0RXIDYwMC9Gb250RGVzY3JpcHRvciA3IDAgUgovQmFzZUZvbnQvU1hSV0ZYK0FuZGFs
+ZU1vbm8vQ0lEVG9HSURNYXAgMTEgMCBSCi9XWzBbNjAwXTMyWzYwMF02N1s2MDBdODRbNjAwXTk3
+WzYwMF05OSAxMDIgNjAwIDEwNFs2MDAgNjAwXTEwN1s2MDBdMTA5IDExMiA2MDAgMTE0IDExNyA2
+MDBdCj4+CmVuZG9iago3IDAgb2JqCjw8L1R5cGUvRm9udERlc2NyaXB0b3IvRm9udE5hbWUvU1hS
+V0ZYK0FuZGFsZU1vbm8vRm9udEZpbGUyIDkgMCBSCi9DSURTZXQgOCAwIFIKL0FzY2VudCA5OTUv
+Q2FwSGVpZ2h0IDY4OS9EZXNjZW50IC0yMTgvRm9udFdlaWdodCA0MDAvRmxhZ3MgMzUvRm9udEJC
+b3hbMCAtMjE4IDYwMCA5OTVdCi9JdGFsaWNBbmdsZSAwL1N0ZW1WIDEwNi9YSGVpZ2h0IDUwOT4+
+CmVuZG9iago4IDAgb2JqCjw8Ci9GaWx0ZXIvRmxhdGVEZWNvZGUvTGVuZ3RoIDIxCj4+CnN0cmVh
+bQp4nGtgYGBoAGIBBg6GuOt7ABErAwoKZW5kc3RyZWFtCmVuZG9iago5IDAgb2JqCjw8L0ZpbHRl
+ci9GbGF0ZURlY29kZS9MZW5ndGggMTAgMCBSPj4Kc3RyZWFtCnicvVgJdFPXmf7vW6Sn/WmzJAvZ
+EsIY8gwGCwsTVFuxkUPqkJitlWnkBWQQJmwxEEjrGuJo7JGBwlABbRyGNklhkjR5TkhxOynjTEhJ
+Z47bpCVxenLSpCxN08EpkymEQ2tp/vsks3SZzjlzzjzp7u++9y/f/91fAgIAGtgJLIiJ9rb4V2b/
+fgrODGAJPrhxVdvkC1O3Y/8slrI1D+5YPfSNOQIA3WScksAN+t8yiwBMdM+UxPot2+Nvmf4Zxwtx
+vGx92/ZNzKvCPTimz/Ou2rbFW/Te/Gdx/AoAs3P1pjXrbZnTtQCWEIDq5KaH2jctv++dbwE4fw/A
+zlVewwB877ihoMUUugI6fDVeL8zU76Htixv3PwqQiXMj/BEcCsr9uasIP33wPKknA4zIbGP+lbWw
+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
+JTHfGvKtNt+q8y2Xa18m2DYGiGxpgIZltbKVYLu0Vg5IDUOsd4lcITXIQuOXooOE7G3CWZnpGyJI
+iVzfEIONpW7Fl6JDxEWXk+7v038S5IbW5J4mySPHaWTt9DTJFbSzz9ME0p9enZ23DQenTY3Id0Ta
+5LJI64JbF8iWW3dsVTq0uuWJnbhEJGR32Y/yS1JzZ/OWzs6bL8ABTt3y1kEN1a1xSS0quERRUi70
+4+ANHARxoPfXwn8Dymq4OQplbmRzdHJlYW0KZW5kb2JqCjEwIDAgb2JqCjUwNTIKZW5kb2JqCjEx
+IDAgb2JqCjw8Ci9GaWx0ZXIvRmxhdGVEZWNvZGUvTGVuZ3RoIDYwCj4+CnN0cmVhbQp4nGMQ+U8R
+YGCkTD/UFCaCKphxyrAAMSsDGwM7AweQxcnABSS5gZiHgZeBj4EfyBJgEGQQYhAGAOohxA8KZW5k
+c3RyZWFtCmVuZG9iagoxIDAgb2JqCjw8Ci9UeXBlL1BhZ2VzCi9Db3VudCAxCi9LaWRzWzIgMCBS
+XQo+PgplbmRvYmoKMTMgMCBvYmoKPDwvVHlwZS9NZXRhZGF0YS9TdWJ0eXBlL1hNTC9MZW5ndGgg
+NzgzPj4Kc3RyZWFtCjw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5U
+Y3prYzlkIj8+Cjx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlB1
+YmxpYyBYTVAgVG9vbGtpdCBDb3JlIDQuMCI+CiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93
+d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPgogIDxyZGY6RGVzY3JpcHRpb24g
+cmRmOmFib3V0PSIiCiAgICB4bWxuczpwZGY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vcGRmLzEuMy8i
+CiAgICB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iCiAgICB4bWxuczp4
+bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIKICAgcGRmOlByb2R1Y2VyPSJj
+YWxsYXMgcGRmQ2hpcCAyLjMgKDA3MCkiCiAgIHhtcDpNb2RpZnlEYXRlPSIyMDIyLTAxLTA3VDEw
+OjMzOjQwKzA4OjAwIgogICB4bXA6TWV0YWRhdGFEYXRlPSIyMDIyLTAxLTA3VDEwOjMzOjQwKzA4
+OjAwIgogICB4bXA6Q3JlYXRlRGF0ZT0iMjAyMi0wMS0wN1QxMDozMzo0MCswODowMCIKICAgeG1w
+TU06SW5zdGFuY2VJRD0idXVpZDphYTZlOGI3Zi1mYzA0LTRjNTMtZjEyOS0yMTY5NzM0NDhlN2Ii
+CiAgIHhtcE1NOkRvY3VtZW50SUQ9InV1aWQ6M2EwODI1NDEtN2YyMS01YTRhLWI3ODctN2M3OGI4
+ODk1NTI4IgogICB4bXBNTTpSZW5kaXRpb25DbGFzcz0iZGVmYXVsdCIKICAgeG1wTU06VmVyc2lv
+bklEPSIxIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgoKPD94cGFja2V0IGVuZD0idyI/Pgpl
+bmRzdHJlYW0KZW5kb2JqCjE0IDAgb2JqCjw8Ci9Qcm9kdWNlcihjYWxsYXMgcGRmQ2hpcCAyLjMg
+XCgwNzBcKSkvQ3JlYXRpb25EYXRlKEQ6MjAyMjAxMDcxMDMzNDArMDgnMDApL01vZERhdGUoRDoy
+MDIyMDEwNzEwMzM0MCswOCcwMCkvVHJhcHBlZC9GYWxzZT4+CmVuZG9iagoxNSAwIG9iago8PAov
+VHlwZS9DYXRhbG9nCi9QYWdlcyAxIDAgUi9NZXRhZGF0YSAxMyAwIFI+PgplbmRvYmoKMTYgMCBv
+YmoKPDwKL1R5cGUvWFJlZi9Sb290IDE1IDAgUi9JbmZvIDE0IDAgUi9JbmRleFswIDE3XS9TaXpl
+IDE3L0lEWzxkYTE5NDdiNjU4ZTczODQ4MzZiNjJhNjJjNmU2MWZkMj48ZGExOTQ3YjY1OGU3Mzg0
+ODM2YjYyYTYyYzZlNjFmZDI+XS9GaWx0ZXIvRmxhdGVEZWNvZGUvRGVjb2RlUGFybXM8PC9QcmVk
+aWN0b3IgMTIvQ29sdW1ucyAzPj4vTGVuZ3RoIDcwL1dbMSAyIDBdPj4Kc3RyZWFtCnicY2JgYGBi
+VCxhYrg/m4mB8z0Tw/cKJgYGbSYGrsdMDIxyQHwPyI9iYhBhBtKiTAwPjzMxKHxiYmCJBvL7gNgB
+AIcYCx0KZW5kc3RyZWFtCmVuZG9iagpzdGFydHhyZWYKOTY4NAolJUVPRgo=
+OUTPUT;
+
+$showHelp = (true == in_array('--help', $argv));
+$showStatus = (true == in_array('--status', $argv));
+$showVersion = (true == in_array('--version', $argv));
+
+// first item is always the path to this file
+unset($argv[0]);
+
+// reset the array indexes
+$argv = array_values($argv);
+
+// strip out all options from $argv since we ignore them anyway
+for($ii = 0; $ii < count($argv); $ii++) {
+    if($argv[$ii]{0} == '-' && $argv[$ii]{1} == '-') {
+        unset($argv[$ii]);
+    }
+}
+
+// no input or output specified, so we'll show the help screen instead
+if(true == empty($argv)) {
+    $showHelp = true;
+}
+
+// --help
+if (true == $showHelp) {
+    echo 'mock pdfChip help
+
+Usage:
+	pdfChip <input file> [<input file> [...] ] <output_file>
+
+Purpose:
+	Convert HTML to PDF
+
+Arguments:
+	<input file>: HTML or SVG input file
+	<output file>: PDF output file
+
+Options:
+	all options are ignored
+
+Further commands:
+	--help: Display help
+	--version: Display version information
+	--status: Display license status'.PHP_EOL;
+    exit;
+}
+
+// --status
+if (true == $showStatus) {
+    echo 'mock pdfChip status
+
+License details:
+	Product: callas pdfChip S
+	License: Full
+	ActivationCode: XRQKF8K7E3HF8K474HA7E3QKJJNKEVXFRK7E3HF8K47
+	S/N: 100010716
+	Name: Mock Person
+	Company: Mock Company
+	EMail: mock@example.com
+
+	Activation: XRQKF8K7E3HF8K474HA7E3QKJJNKEVXFRK7E3HF8K47	callas pdfChip S	/home/mock/.callas software/callas pdfChip mock/License.txt
+
+Limitations:
+	Parallel processes: 1
+	Barcodes: EAN, UPC, ISBN, Code39, Code 128 and QR
+	Pages per document: 25
+	Pages per hour: 1000 (1000 remaining)
+	Advanced pagination: No
+
+Return codes:
+20: An unknown error has occurred.
+21: Unable to write pdf file, file access error.
+...
+111: OCG or OCMD error.
+112: Zero page size specified in CSS.
+113: Conversion did not finish during user specified timeout.'.PHP_EOL;
+    exit;
+}
+
+// --version
+if (true == $showVersion) {
+  echo 'callas pdfChip: 2.3.070 (x64)
+cChipPDF-Library: 2.14.088
+Qt: 5.6.3'.PHP_EOL;
+  exit;
+}
+
+function finish(int $code = 0) {
+    echo 'Time elapsed: '.rand(1,999).' msec msec'.PHP_EOL;
+    exit($code);
+}
+
+$inputFiles = [];
+
+// we always assume there is at least a single input file
+$inputFiles[] = array_shift($argv);
+
+// of what is left, the output file is always the last item
+$outputFile = array_pop($argv);
+
+// (guard) no output file specified so construct one from the input file name
+if(true == empty($outputFile)) {
+    $outputFile = pathinfo($inputFiles[0], PATHINFO_FILENAME) . '.pdf';
+}
+
+// everything left in $argv is an additional input file
+$inputFiles = array_merge($inputFiles, $argv);
+
+/*
+|--------------------------------------------------------------------------
+| Start emulating output to console
+|--------------------------------------------------------------------------
+|
+| This section will attempt to accuately emulate the output to the console
+| as each file is loaded, read, and output is attempted. Even though
+| the output is static, we'll still check each file exists and
+| throw an error accordingly
+|
+*/
+
+foreach($inputFiles as $index => $file) {
+    echo 'converting "'.$file.'"'.PHP_EOL;
+
+    // pdfChip includes an additional line for the first item
+    if(0 == $index) {
+        echo 'output PDF "'.$outputFile.'"'.PHP_EOL;
+    }
+
+    // (guard) input file is not readable
+    if(false == file_exists($file)) {
+        echo 'Error: Failed to load page: "'.$file.'"'.PHP_EOL;
+        finish(1);
+    }
+
+    echo "page {$index}
+end page {$index}".PHP_EOL;
+}
+
+// (guard) outputFile path is not writable
+if (false == is_writable($outputFile)) {
+    echo 'PdfCreator Error: Unable to write pdf file, file access error.'.PHP_EOL;
+    finish(1);
+}
+
+// Write the mock output to outputFile path
+file_put_contents($outputFile, base64_decode($output));
+
+finish();
