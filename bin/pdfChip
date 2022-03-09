@@ -215,13 +215,13 @@ $argv = array_values($argv);
 
 // strip out all options from $argv since we ignore them anyway
 for($ii = 0; $ii < count($argv); $ii++) {
-    if($argv[$ii]{0} == '-' && $argv[$ii]{1} == '-') {
+    if($argv[$ii][0] == '-' && $argv[$ii][1] == '-') {
         unset($argv[$ii]);
     }
 }
 
 // no input or output specified, so we'll show the help screen instead
-if(true == empty($argv)) {
+if(false == $showStatus && false == $showVersion && true == empty($argv)) {
     $showHelp = true;
 }
 
