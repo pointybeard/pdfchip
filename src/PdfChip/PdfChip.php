@@ -190,7 +190,7 @@ class PdfChip
     {
         self::runWithArgs('--status | grep "Activation:"', $output, $errors, self::FLAGS_SKIP_ASSERT_ACTIVATED);
 
-        // Examples of possible values for 'Activiation':
+        // Examples of possible values for 'Activation':
         // 1. ""
         // 2. Activation: 7E3HF8K...G795CNFMS	callas pdfChip S	/home/.../License.txt
         // 3. Activation: None
@@ -205,38 +205,72 @@ class PdfChip
         return true;
     }
 
-    public static function processHtmlString(string $input, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
+    public static function processHtmlString($input, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
     {
         return self::processString($input, self::STRING_TYPE_HTML, $outputFile, $options, $output, $errors, $flags);
     }
 
-    public static function processSvgString(string $input, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
+    public static function processSvgString($input, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
     {
         return self::processString($input, self::STRING_TYPE_SVG, $outputFile, $options, $output, $errors, $flags);
     }
 
-    public static function processString(string $input, string $inputFileType, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
+    public static function processString($input, $inputFileType, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
     {
-        // Save the string contents to a tmp file then call self::process();
-        $inputFile = tempnam(sys_get_temp_dir(), self::EXECUTABLE_NAME);
 
-        // (guard) Unable to create a temporary file name
-        if (false == $inputFile) {
-            throw new PdfChipException('Unable to generate temporary file.');
+        // (guard) $input is not a string or array
+        if(false == is_string($input) && false == is_array($input)) {
+            throw new PdfChipAssertionFailedException('input must be either a string or an array of strings');
         }
 
-        // pdfChip requires a file extension otherwise it will refuse to load the file.
-        // So, rename the temp file to include the specified extension
-        if (false == rename($inputFile, $inputFile .= ".{$inputFileType}")) {
-            throw new PdfChipException("Unable to generate temporary file. Failed to add .{$inputFileType} extension.");
+        // (guard) $inputFileType is not a string or array
+        if(false == is_string($inputFileType) && false == is_array($inputFileType)) {
+            throw new PdfChipAssertionFailedException('inputFileType must be either a string or an array of strings');
         }
 
-        // (guard) Unable to save contents to temporary file
-        if (false === file_put_contents($inputFile, $input)) {
-            throw new PdfChipException("Unable to save input string to temporary file {$inputFile}.");
+        if(false == is_array($input)) {
+            $input = [$input];
         }
 
-        return self::process($inputFile, $outputFile, $options, $output, $errors, $flags);
+        if(false == is_array($inputFileType)) {
+            $inputFileType = array_pad([], count($input), $inputFileType);
+        }
+
+        $inputFiles = [];
+
+        foreach($input as $ii => $contents) {
+
+            // (guard) $contents is not a string
+            if(false == is_string($contents)) {
+                throw new PdfChipAssertionFailedException("input.{$ii} is not a valid string");
+            }
+
+            // (guard) $inputFileType[$ii] is not a string
+            if(false == is_string($inputFileType[$ii])) {
+                throw new PdfChipAssertionFailedException("inputFileType.{$ii} is not a valid string");
+            }
+
+            // Save the string contents to a tmp file then call self::process();
+            $inputFiles[$ii] = tempnam(sys_get_temp_dir(), self::EXECUTABLE_NAME);
+
+            // (guard) Unable to create a temporary file name
+            if (false == $inputFiles[$ii]) {
+                throw new PdfChipException('Unable to generate temporary file.');
+            }
+
+            // pdfChip requires a file extension otherwise it will refuse to load the file.
+            // So, rename the temp file to include the specified extension
+            if (false == rename($inputFiles[$ii], $inputFiles[$ii] .= ".{$inputFileType[$ii]}")) {
+                throw new PdfChipException("Unable to generate temporary file. Failed to add .{$inputFileType[$ii]} extension.");
+            }
+
+            // (guard) Unable to save contents to temporary file
+            if (false === file_put_contents($inputFiles[$ii], $contents)) {
+                throw new PdfChipException("Unable to save input string to temporary file {$inputFiles[$ii]}.");
+            }
+        }
+
+        return self::process($inputFiles, $outputFile, $options, $output, $errors, $flags);
     }
 
     public static function process($inputFiles, string $outputFile, array $options = [], ?string &$output = null, ?string &$errors = null, ?int $flags = null): string
