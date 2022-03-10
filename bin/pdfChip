@@ -341,7 +341,7 @@ end page {$index}".PHP_EOL;
 }
 
 // (guard) outputFile path is not writable
-if (false == is_writable($outputFile)) {
+if (false == is_writable(dirname($outputFile))) {
     echo 'PdfCreator Error: Unable to write pdf file, file access error.'.PHP_EOL;
     finish(1);
 }
